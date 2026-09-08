@@ -1,0 +1,33 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: prestashop
+      MARIADB_USER: prestashop
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+  prestashop:
+    image: prestashop/prestashop:9.1.5-apache
+    ports:
+      - "8081:80"
+    environment:
+      DB_SERVER: db
+      DB_NAME: prestashop
+      DB_USER: prestashop
+      DB_PASSWD: ${DB_PASSWORD}
+      PS_DEV_MODE: 1
+      PS_INSTALL_AUTO: 1
+      PS_DOMAIN: localhost:8081
+      ADMIN_MAIL: ${ADMIN_MAIL}
+      ADMIN_PASSWD: ${ADMIN_PASSWORD}
+    volumes:
+      - prestashop_data:/var/www/html
+      - ./modules/productquestions:/var/www/html/modules/productquestions
+    depends_on:
+      - db
+volumes:
+  db_data:
+  prestashop_data:
+
