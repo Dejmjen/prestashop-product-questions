@@ -42,8 +42,11 @@ class ProductQuestions extends Module
             'submit'
         );
 
+        $idProduct = (int) Tools::getValue('id_product');
+
         return '
             <form method="post" action="' . htmlspecialchars($action, ENT_QUOTES, 'UTF-8') . '">
+                <input type="hidden" name="id_product" value=' . $idProduct . '>
                 <label for="question">Pytanie o produkt</label>
                 <textarea id="question" name="question" required></textarea>
                 <button type="submit" name="submitQuestion">
