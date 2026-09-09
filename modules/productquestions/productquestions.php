@@ -97,9 +97,37 @@ class ProductQuestions extends Module
 
     public function getContent()
     {
+
+        $html = '';
+
+        if(Tools::isSubmit('submitProductQuestionAnswer'))
+        {
+            $idQuestion = (int) Tools::getValue('id_product_question');
+            $answer = trim((string) Tools::getValue('answer'));
+
+            if($idQuestion <= 0 || $answer === ''){
+                $html .= $this->displayError('Question ID and answer are required.');
+            } else {
+                $result = Db::getInstance()->update(
+                    'product_question',
+                    [
+                        'answer' => pSQL($answer),
+                        'is_approved' => 1,
+                    ],
+                    'id_product_question = ' . $idQuestion
+                );
+
+                if ($result){
+                    $html .= $this->displayConfirmation("Answer saved.");
+                } else {
+                    $html .= $this->displayError("Failed to save the answer");
+                }
+            }
+        }
+
         $questions = $this->getAllQuestions();
 
-        $html = '<h2>Product Questions</h2>';
+        $html .= '<h2>Product Questions</h2>';
 
         if(empty($questions)){
             return $html . '<p>No questions yet.</p>';
@@ -111,6 +139,22 @@ class ProductQuestions extends Module
                 <p><strong>ProductID:</strong>' . (int) $question['id_product'] . '</p>
                 <p><strong>Question:</strong>' . htmlspecialchars($question['question'], ENT_QUOTES, 'UTF-8') . '</p>
                 <p><strong>Status:</strong>' . ((int) $question['is_approved'] === 1 ? 'Approved' : 'Pending') . '</p>
+            
+                <form method="post">
+                    <input type="hidden" name="id_product_question" value="' . (int) $question['id_product_question'] . '">
+                    <label>Answer</label>
+                    <textarea name="answer" class="form-control" required>'
+                    .htmlspecialchars((string) $question['answer'], ENT_QUOTES, 'UTF-8').
+                    '</textarea>
+
+                    <br>
+
+                    <button type="submit"
+                        name="submitProductQuestionAnswer"
+                        class="btn btn-primary">
+                        Save answer
+                    </button> 
+                </form>
             </div>';
         }
 
