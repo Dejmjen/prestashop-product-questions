@@ -44,6 +44,22 @@ class ProductQuestions extends Module
 
         $idProduct = (int) Tools::getValue('id_product');
 
+        $questions = $this->getQuestionsForProduct($idProduct);
+
+        $questionsHTML = '<h3>Questions about the product.</h3>';
+
+        if(empty($questions)){
+            $questionsHTML .= '<p>No questions yet!</p>';
+        } else {
+            foreach ($questions as $question){
+                $questionsHTML .= '
+                <div class="product-question">
+                    <p>' . htmlspecialchars($question['question'], ENT_QUOTES, 'UTF-8') . '</p>
+                </div>';
+            }
+        }
+    
+
         return '
             <form method="post" action="' . htmlspecialchars($action, ENT_QUOTES, 'UTF-8') . '">
                 <input type="hidden" name="id_product" value=' . $idProduct . '>
@@ -53,6 +69,18 @@ class ProductQuestions extends Module
                     Wyślij pytanie
                 </button>
             </form>
-        ';
+        ' . $questionsHTML;
     }
+
+    private function getQuestionsForProduct(int $idProduct):array
+    {
+        $sql = 'SELECT id_product_question, question, answer, date_add
+        FROM `' . _DB_PREFIX_ .'product_question`
+        WHERE id_product = ' . $idProduct . '
+        ORDER BY date_add DESC;';
+
+        return Db::getInstance()->executeS($sql);
+
+    }
+
 }
