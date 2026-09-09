@@ -72,15 +72,49 @@ class ProductQuestions extends Module
         ' . $questionsHTML;
     }
 
-    private function getQuestionsForProduct(int $idProduct):array
+    private function getQuestionsForProduct(int $idProduct): array
     {
         $sql = 'SELECT id_product_question, question, answer, date_add
         FROM `' . _DB_PREFIX_ .'product_question`
         WHERE id_product = ' . $idProduct . '
+        AND is_approved = 1
         ORDER BY date_add DESC;';
 
-        return Db::getInstance()->executeS($sql);
+        $result = Db::getInstance()->executeS($sql);
+        return is_array($result) ? $result : [];
 
+    }
+
+    private function getAllQuestions(): array
+    {
+        $sql = 'SELECT id_product_question, id_product, question, answer, is_approved, date_add
+        FROM `' . _DB_PREFIX_ . 'product_question`
+        ORDER BY date_add DESC;';
+
+        $result = Db::getInstance()->executeS($sql);
+        return is_array($result) ? $result : [];
+    }
+
+    public function getContent()
+    {
+        $questions = $this->getAllQuestions();
+
+        $html = '<h2>Product Questions</h2>';
+
+        if(empty($questions)){
+            return $html . '<p>No questions yet.</p>';
+        }
+
+        foreach($questions as $question){
+            $html .= '
+            <div class="panel">
+                <p><strong>ProductID:</strong>' . (int) $question['id_product'] . '</p>
+                <p><strong>Question:</strong>' . htmlspecialchars($question['question'], ENT_QUOTES, 'UTF-8') . '</p>
+                <p><strong>Status:</strong>' . ((int) $question['is_approved'] === 1 ? 'Approved' : 'Pending') . '</p>
+            </div>';
+        }
+
+        return $html;
     }
 
 }
