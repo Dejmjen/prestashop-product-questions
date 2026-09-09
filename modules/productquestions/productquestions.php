@@ -59,8 +59,16 @@ class ProductQuestions extends Module
             }
         }
     
+        # Notification when user submits question
+        $notificationHtml = '';
+        if (Tools::getValue('question_submitted') === '1') {
+            $notificationHtml = '
+            <div class="alert alert-success">
+                Your question has been submitted for moderation.
+            </div>';
+        }
 
-        return '
+        return $notificationHtml . '
             <form method="post" action="' . htmlspecialchars($action, ENT_QUOTES, 'UTF-8') . '">
                 <input type="hidden" name="id_product" value=' . $idProduct . '>
                 <label for="question">Pytanie o produkt</label>

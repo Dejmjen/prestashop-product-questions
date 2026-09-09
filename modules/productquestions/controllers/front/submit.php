@@ -11,14 +11,12 @@ class ProductQuestionsSubmitModuleFrontController extends ModuleFrontController
         $question = trim((string) Tools::getValue('question'));
         $idProduct = (int) Tools::getValue('id_product');
 
-        if ($question === '')
-        {
-            die('Question cannot be empty.');
+        if($question === '' || mb_strlen($question) > 1000){
+            die('Question must be between 1 and 1000 characters long.');
         }
 
-        if ($idProduct <= 0)
-        {
-            die('Invalid product ID');
+        if ($idProduct <= 0 || !Validate::isLoadedObject(new Product($idProduct))){
+            die('Invalid product ID.');
         }
 
         $result = Db::getInstance()->insert('product_question', [
@@ -32,7 +30,7 @@ class ProductQuestionsSubmitModuleFrontController extends ModuleFrontController
             die('Failed to save the question');
         }
 
-        die('Question sent successfuly. ID: ' . (int) Db::getInstance()->Insert_ID());
-
+        $productUrl = $this->context->link->getProductLink($idProduct);
+        Tools::redirect($productUrl . '?question_submitted=1');
     }
 }
