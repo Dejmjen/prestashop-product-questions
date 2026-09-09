@@ -54,10 +54,14 @@ class ProductQuestions extends Module
             $questionsHTML .= '<p>No questions yet!</p>';
         } else {
             foreach ($questions as $question){
-                $questionsHTML .= '
-                <div class="product-question">
-                    <p>' . htmlspecialchars($question['question'], ENT_QUOTES, 'UTF-8') . '</p>
-                </div>';
+                $questionsHTML .= '<div class="product-question">';
+                $questionsHTML .= '<p><strong>Q:</strong> ' . htmlspecialchars($question['question']) . '</p>';
+
+                if (!empty($question['answer'])) {
+                    $questionsHTML .= '<p><strong>A:</strong> ' . htmlspecialchars($question['answer']) . '</p>';
+                }
+
+                $questionsHTML .= '</div>';
             }
         }
     
@@ -162,6 +166,18 @@ class ProductQuestions extends Module
             }
         }
 
+        if(Tools::isSubmit('submitDeleteProductQuestion'))
+        {
+            $idQuestion = (int) Tools::getValue('id_product_question');
+            $result = Db::getInstance()->delete('product_question', 'id_product_question = ' . $idQuestion);
+
+            if($result){
+                $html .= $this->displayConfirmation("Question deleted.");
+            } else {
+                $html .= $this->displayError("Failed to delete the question.");
+            }
+        }
+
         $questions = $this->getAllQuestions();
 
         $html .= '<h2>Product Questions</h2>';
@@ -191,6 +207,13 @@ class ProductQuestions extends Module
                         class="btn btn-primary">
                         Save answer
                     </button> 
+
+                    <button type="submit"
+                    name="submitDeleteProductQuestion"
+                    class="btn"
+                    formnovalidate>
+                        Delete
+                    </button>
                 </form>
             </div>';
         }

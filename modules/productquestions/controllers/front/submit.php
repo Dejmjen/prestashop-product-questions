@@ -40,15 +40,14 @@ class ProductQuestionsSubmitModuleFrontController extends ModuleFrontController
             return;
         }
 
-        $productUrl = $this->context->link->getProductLink($idProduct);
         $this->redirectToProduct($idProduct, 'success');
     }
 
     private function redirectToProduct(int $idProduct, string $status): void
     {
         $url = $this->context->link->getProductLink($idProduct);
-        $seperator = strpos($url, '?') === false ? '?' : '&';
+        $separator = strpos($url, '?') === false ? '?' : '&';
 
-        Tools::redirect($url . $seperator . 'question_status=' . urlencode($status));
+        Tools::redirect($url . $separator . 'question_status=' . urlencode($status));
     }
 }
