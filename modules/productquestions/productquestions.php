@@ -42,6 +42,8 @@ class ProductQuestions extends Module
             'submit'
         );
 
+        $csrfToken = Tools::getToken(false);
+
         $idProduct = (int) Tools::getValue('id_product');
 
         $questions = $this->getQuestionsForProduct($idProduct);
@@ -59,18 +61,45 @@ class ProductQuestions extends Module
             }
         }
     
-        # Notification when user submits question
+        # Notification handling
+        $status = (string) Tools::getValue('question_status');
         $notificationHtml = '';
-        if (Tools::getValue('question_submitted') === '1') {
-            $notificationHtml = '
-            <div class="alert alert-success">
+
+        switch($status){
+
+        case 'success':
+            $notificationHtml = '<div class="alert alert-success">
                 Your question has been submitted for moderation.
             </div>';
+            break;
+
+        case 'invalid_question':
+            $notificationHtml = '<div class="alert alert-danger">
+                Question must contain between 1 and 1000 characters.
+            </div>';
+            break;
+
+        case 'save_error':
+            $notificationHtml = '<div class="alert alert-danger">
+                Could not save your question.
+            </div>';
+            break;
+
+        case 'invalid_token':
+            $notificationHtml = '<div class="alert alert-danger">
+                Invalid security token.
+            </div>';
+            break;
+
+        default:
+            break;
         }
+
 
         return $notificationHtml . '
             <form method="post" action="' . htmlspecialchars($action, ENT_QUOTES, 'UTF-8') . '">
                 <input type="hidden" name="id_product" value=' . $idProduct . '>
+                <input type="hidden" name="csrf_token" value="' . htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') . '">
                 <label for="question">Pytanie o produkt</label>
                 <textarea id="question" name="question" required></textarea>
                 <button type="submit" name="submitQuestion">

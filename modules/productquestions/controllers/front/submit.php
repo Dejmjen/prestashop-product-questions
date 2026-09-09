@@ -11,12 +11,21 @@ class ProductQuestionsSubmitModuleFrontController extends ModuleFrontController
         $question = trim((string) Tools::getValue('question'));
         $idProduct = (int) Tools::getValue('id_product');
 
-        if($question === '' || mb_strlen($question) > 1000){
-            die('Question must be between 1 and 1000 characters long.');
-        }
-
         if ($idProduct <= 0 || !Validate::isLoadedObject(new Product($idProduct))){
             die('Invalid product ID.');
+        }
+
+        # Checking CSRF Token
+        $submittedToken = (string) Tools::getValue('csrf_token');
+
+        if (!hash_equals(Tools::getToken(false), $submittedToken)){
+            $this->redirectToProduct($idProduct, 'invalid_token');
+            return;
+        }
+
+        if($question === '' || mb_strlen($question) > 1000){
+            $this->redirectToProduct($idProduct, 'invalid_question');
+            return;
         }
 
         $result = Db::getInstance()->insert('product_question', [
@@ -27,10 +36,19 @@ class ProductQuestionsSubmitModuleFrontController extends ModuleFrontController
         ]);
 
         if (!$result) {
-            die('Failed to save the question');
+            $this->redirectToProduct($idProduct, 'save_error');
+            return;
         }
 
         $productUrl = $this->context->link->getProductLink($idProduct);
-        Tools::redirect($productUrl . '?question_submitted=1');
+        $this->redirectToProduct($idProduct, 'success');
+    }
+
+    private function redirectToProduct(int $idProduct, string $status): void
+    {
+        $url = $this->context->link->getProductLink($idProduct);
+        $seperator = strpos($url, '?') === false ? '?' : '&';
+
+        Tools::redirect($url . $seperator . 'question_status=' . urlencode($status));
     }
 }
