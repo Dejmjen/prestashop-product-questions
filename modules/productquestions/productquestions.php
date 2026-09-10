@@ -43,74 +43,19 @@ class ProductQuestions extends Module
         );
 
         $csrfToken = Tools::getToken(false);
-
-        $idProduct = (int) Tools::getValue('id_product');
-
+        $idProduct = (int) $params['product']['id_product'];
         $questions = $this->getQuestionsForProduct($idProduct);
-
-        $questionsHTML = '<h3>Questions about the product.</h3>';
-
-        if(empty($questions)){
-            $questionsHTML .= '<p>No questions yet!</p>';
-        } else {
-            foreach ($questions as $question){
-                $questionsHTML .= '<div class="product-question">';
-                $questionsHTML .= '<p><strong>Q:</strong> ' . htmlspecialchars($question['question']) . '</p>';
-
-                if (!empty($question['answer'])) {
-                    $questionsHTML .= '<p><strong>A:</strong> ' . htmlspecialchars($question['answer']) . '</p>';
-                }
-
-                $questionsHTML .= '</div>';
-            }
-        }
-    
-        # Notification handling
         $status = (string) Tools::getValue('question_status');
-        $notificationHtml = '';
 
-        switch($status){
+        $this->context->smarty->assign([
+            'questions' => $questions,
+            'action' => $action,
+            'csrf_token' => $csrfToken,
+            'id_product' => $idProduct,
+            'question_status' => $status,
+        ]);
 
-        case 'success':
-            $notificationHtml = '<div class="alert alert-success">
-                Your question has been submitted for moderation.
-            </div>';
-            break;
-
-        case 'invalid_question':
-            $notificationHtml = '<div class="alert alert-danger">
-                Question must contain between 1 and 1000 characters.
-            </div>';
-            break;
-
-        case 'save_error':
-            $notificationHtml = '<div class="alert alert-danger">
-                Could not save your question.
-            </div>';
-            break;
-
-        case 'invalid_token':
-            $notificationHtml = '<div class="alert alert-danger">
-                Invalid security token.
-            </div>';
-            break;
-
-        default:
-            break;
-        }
-
-
-        return $notificationHtml . '
-            <form method="post" action="' . htmlspecialchars($action, ENT_QUOTES, 'UTF-8') . '">
-                <input type="hidden" name="id_product" value=' . $idProduct . '>
-                <input type="hidden" name="csrf_token" value="' . htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') . '">
-                <label for="question">Pytanie o produkt</label>
-                <textarea id="question" name="question" required></textarea>
-                <button type="submit" name="submitQuestion">
-                    Wyślij pytanie
-                </button>
-            </form>
-        ' . $questionsHTML;
+        return $this->display(__FILE__, 'views/templates/hook/product_questions.tpl');
     }
 
     private function getQuestionsForProduct(int $idProduct): array
@@ -141,84 +86,61 @@ class ProductQuestions extends Module
 
         $html = '';
 
+        # Perform operation depending on form action taken.
         if(Tools::isSubmit('submitProductQuestionAnswer'))
-        {
-            $idQuestion = (int) Tools::getValue('id_product_question');
-            $answer = trim((string) Tools::getValue('answer'));
-
-            if($idQuestion <= 0 || $answer === ''){
-                $html .= $this->displayError('Question ID and answer are required.');
-            } else {
-                $result = Db::getInstance()->update(
-                    'product_question',
-                    [
-                        'answer' => pSQL($answer),
-                        'is_approved' => 1,
-                    ],
-                    'id_product_question = ' . $idQuestion
-                );
-
-                if ($result){
-                    $html .= $this->displayConfirmation("Answer saved.");
-                } else {
-                    $html .= $this->displayError("Failed to save the answer");
-                }
-            }
-        }
+        { $html .= $this->handleAnswerSubmission(); }
 
         if(Tools::isSubmit('submitDeleteProductQuestion'))
-        {
-            $idQuestion = (int) Tools::getValue('id_product_question');
-            $result = Db::getInstance()->delete('product_question', 'id_product_question = ' . $idQuestion);
-
-            if($result){
-                $html .= $this->displayConfirmation("Question deleted.");
-            } else {
-                $html .= $this->displayError("Failed to delete the question.");
-            }
-        }
+        { $html .= $this->handleDeleteQuestion(); }
 
         $questions = $this->getAllQuestions();
 
-        $html .= '<h2>Product Questions</h2>';
+        $this->context->smarty->assign([
+            'questions' => $questions,
+        ]);
 
-        if(empty($questions)){
-            return $html . '<p>No questions yet.</p>';
-        }
-
-        foreach($questions as $question){
-            $html .= '
-            <div class="panel">
-                <p><strong>ProductID:</strong>' . (int) $question['id_product'] . '</p>
-                <p><strong>Question:</strong>' . htmlspecialchars($question['question'], ENT_QUOTES, 'UTF-8') . '</p>
-                <p><strong>Status:</strong>' . ((int) $question['is_approved'] === 1 ? 'Approved' : 'Pending') . '</p>
-            
-                <form method="post">
-                    <input type="hidden" name="id_product_question" value="' . (int) $question['id_product_question'] . '">
-                    <label>Answer</label>
-                    <textarea name="answer" class="form-control" required>'
-                    .htmlspecialchars((string) $question['answer'], ENT_QUOTES, 'UTF-8').
-                    '</textarea>
-
-                    <br>
-
-                    <button type="submit"
-                        name="submitProductQuestionAnswer"
-                        class="btn btn-primary">
-                        Save answer
-                    </button> 
-
-                    <button type="submit"
-                    name="submitDeleteProductQuestion"
-                    class="btn"
-                    formnovalidate>
-                        Delete
-                    </button>
-                </form>
-            </div>';
-        }
+        $html .= $this->display(__FILE__, 'views/templates/admin/configure.tpl');
 
         return $html;
     }
 
+    private function handleAnswerSubmission():  string
+    {
+        $idQuestion = (int) Tools::getValue('id_product_question');
+        $answer = trim((string) Tools::getValue('answer'));
+
+        if ($idQuestion <= 0 || $answer === '')
+        {return $this->displayError('Question ID and answer are required.');}
+
+        $result = Db::getInstance()->update(
+            'product_question',
+            [
+                'answer' => pSQL($answer),
+                'is_approved' => 1,
+            ],
+            'id_product_question = ' . $idQuestion
+        );
+
+        return $result
+            ? $this->displayConfirmation('Answer saved.')
+            : $this->displayError('Failed to save the answer.');
+    }
+
+    private function handleDeleteQuestion(): string
+    {
+        $idQuestion = (int) Tools::getValue('id_product_question');
+
+        if ($idQuestion <= 0){
+            return $this->displayError('Invalid question ID.');
+        }
+
+        $result = Db::getInstance()->delete(
+            'product_question',
+            'id_product_question = ' . $idQuestion 
+        );
+
+        return $result
+            ? $this->displayConfirmation('Question deleted.')
+            : $this->displayError('Failed to delete the question.');
+    }
 }
