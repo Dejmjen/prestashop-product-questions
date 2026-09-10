@@ -27,7 +27,8 @@ class ProductQuestions extends Module
     {
         return parent::install()
             && $this->registerHook('displayFooterProduct')
-            && $this->installDatabase();
+            && $this->installDatabase()
+            && $this->registerHook('displayHeader');
     }
 
     private function installDatabase()
@@ -56,6 +57,18 @@ class ProductQuestions extends Module
         ]);
 
         return $this->display(__FILE__, 'views/templates/hook/product_questions.tpl');
+    }
+
+    public function hookDisplayHeader()
+    {
+        $this->context->controller->registerStyleSheet(
+            'module-productquestions',
+            'modules/' . $this->name . '/views/css/productquestions.css',
+            [
+                'media' => 'all',
+                'priority' => 150,
+            ]
+        );
     }
 
     private function getQuestionsForProduct(int $idProduct): array

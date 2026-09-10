@@ -16,56 +16,61 @@
     </div>
 {/if}
 
-<form method="post" action="{$action|escape:'html':'UTF-8'}">
+<div class="product-questions">
 
-    <input
-        type="hidden"
-        name="id_product"
-        value="{$id_product|intval}"
-    >
+    <div class="product-questions__form">
 
-    <input
-        type="hidden"
-        name="csrf_token"
-        value="{$csrf_token|escape:'html':'UTF-8'}"
-    >
+        <form method="post" action="{$action|escape:'html':'UTF-8'}">
 
-    <label for="question">Question about the product</label>
+            <input
+                type="hidden"
+                name="id_product"
+                value="{$id_product|intval}"
+            >
 
-    <textarea
-        id="question"
-        name="question"
-        required
-    ></textarea>
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{$csrf_token|escape:'html':'UTF-8'}"
+            >
 
-    <button
-        type="submit"
-        name="submitQuestion"
-    >
-        Send question
-    </button>
+            <label for="question">Question about the product</label>
 
-</form>
+            <textarea
+                id="question"
+                name="question"
+                required
+            ></textarea>
 
-<h3>Questions about the product</h3>
+            <button
+                type="submit"
+                name="submitQuestion"
+            >
+                Send question
+            </button>
+        </form>
+    </div>
 
-{if empty($questions)}
-    <p>No questions yet!</p>
-{else}
-    {foreach from=$questions item=question}
-        <div class="product-question">
+    <h3>Questions about the product</h3>
 
-            <p>
-                <strong>Q: </strong>
-                {$question.question|escape:'html':'UTF-8'}
-            </p>
+    {if empty($questions)}
+        <p>No questions yet!</p>
+    {else}
+        {foreach from=$questions item=question}
+            <div class="product-question">
 
-            {if !empty($question.answer)}
                 <p>
-                    <strong>A: </strong>
-                    {$question.answer|escape:'html':'UTF-8'}
+                    <strong>Q: </strong>
+                    {$question.question|escape:'html':'UTF-8'}
                 </p>
-            {/if}
-        </div>
-    {/foreach}
-{/if}
+
+                {if !empty($question.answer)}
+                    <p class="product-question__answer">
+                        <strong>A: </strong>
+                        {$question.answer|escape:'html':'UTF-8'}
+                    </p>
+                {/if}
+            </div>
+        {/foreach}
+    {/if}
+</div>
