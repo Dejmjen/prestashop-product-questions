@@ -104,16 +104,41 @@ docker compose up -d
 
 5. Complete the PrestaShop installation if required.
 
-6. Open PrestaShop Back Office and install the **Product Questions** module from:
+6. Open PrestaShop Back Office and install the **Product Questions** module:
 
-```text
-Modules > Module Manager
+There currently is a bug with customizing admin panel folder name in the latest version. PrestaShop generates a random name by default. 
+To find admin panel address you can run this command in the project folder:
+
+**Windows PowerShell**
+```powershell
+$admin = docker compose exec -T prestashop sh -c 'for d in /var/www/html/admin*; do b=$(basename "$d"); case "$b" in admin-api|admin-dev) continue ;; esac; [ -d "$d" ] && echo "$b" && break; done'; $port = ((Get-Content .env | Where-Object { $_ -match '^APP_PORT=' }) -replace '^APP_PORT=', ''); "http://localhost:$port/$admin/"
 ```
+
+**Linux / macOS**
+```bash
+admin=$(docker compose exec -T prestashop sh -c 'for d in /var/www/html/admin*; do b=$(basename "$d"); case "$b" in admin-api|admin-dev) continue ;; esac; [ -d "$d" ] && echo "$b" && break; done')
+port=$(grep '^APP_PORT=' .env | cut -d '=' -f2)
+echo "http://localhost:$port/$admin/"
+```
+
+Or you can find it manually in dokcer logs:
+
+```bash
+docker compose logs prestashop
+```
+Look for the line:
+`You can now access your backoffice at http://localhost:8081/XXX/.`
+
 
 Default Back Office credentials, if not changed in `.env`:
 ```text
 E-mail: admin@example.com
 Password: Admin123!
+```
+
+Then you can access the module from:
+```text
+Modules > Module Manager
 ```
 
 7. Questions can be moderated from the module configuration page in Back Office.
