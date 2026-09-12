@@ -110,6 +110,12 @@ docker compose up -d
 Modules > Module Manager
 ```
 
+Default Back Office credentials, if not changed in `.env`:
+```text
+E-mail: admin@example.com
+Password: Admin123!
+```
+
 7. Questions can be moderated from the module configuration page in Back Office.
 
 ### Option 2: Install only the module in an existing PrestaShop store
