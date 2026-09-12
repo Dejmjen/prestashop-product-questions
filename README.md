@@ -99,7 +99,7 @@ Do not commit your local .env file. The repository contains .env.example as a sa
 4. Start the containers:
 
 ```bash
-docker compose up -d
+docker compose up -d --wait
 ```
 
 5. Complete the PrestaShop installation if required.

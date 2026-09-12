@@ -6,10 +6,22 @@ services:
       MARIADB_DATABASE: prestashop
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     volumes:
       - db_data:/var/lib/mysql
   prestashop:
     image: prestashop/prestashop:9.1.5-apache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
     ports:
       - "${APP_PORT}:80"
     environment:
@@ -26,7 +38,8 @@ services:
       - prestashop_data:/var/www/html
       - ./modules/productquestions:/var/www/html/modules/productquestions
     depends_on:
-      - db
+      db:
+        condition: "service_healthy"
 volumes:
   db_data:
   prestashop_data:
